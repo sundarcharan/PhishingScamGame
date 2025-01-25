@@ -4,8 +4,10 @@
 // Get the raw POST data
 $data = file_get_contents('php://input');
 
+
 // Decode the JSON data into an array
 $scoreData = json_decode($data, true);
+$scoreData["create_time"] = date("y-m-d h:m");
 
 // Save the data to a JSON file (or database)
 $file = 'scores.json';

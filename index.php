@@ -6,6 +6,7 @@
     <title>Phishing Scam Detector</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
     <style>
         body {
             text-align: center;
@@ -51,19 +52,49 @@
         <p>Can you spot the phishing scams?</p>
 
         <!-- Bootstrap Modal for Name Input -->
-        <div class="modal fade" id="nameModal" tabindex="-1" aria-labelledby="nameModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
+        <div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="nameModal" tabindex="-1" aria-labelledby="nameModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="nameModalLabel">Enter Your Name</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <!-- <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button> -->
                     </div>
                     <div class="modal-body">
                         <input type="text" id="playerName" class="form-control" placeholder="Your Name">
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="closeModel">Close</button>
+                        <button type="button" class="btn btn-secondary d-none" data-bs-dismiss="modal" id="closeModel">Close</button>
                         <button type="button" class="btn btn-primary" id="startGameBtn">Start Game</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Bootstrap Modal for Name Input -->
+        <div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="viewModal" tabindex="-1" aria-labelledby="viewModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="viewModalLabel">View Data</h5>
+                        <button type="button" class="btn-close" id="closeView" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="container">
+                            <h3>High Scores</h3>
+                            <table id="scoreTable" class="display table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Player Name</th>
+                                        <th>Score Point</th>
+                                        <th>Date Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="scoreTableBody">
+                                    <!-- Scores will be appended here -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -89,6 +120,9 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script> <!-- Include jQuery -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
     <script>
         // Game Variables
         let emails = [
@@ -104,8 +138,8 @@
             { content: "Security Alert: Your account has been temporarily suspended. Please update your details to restore access.", isScam: true },
             { content: "Hi, your subscription to Spotify has been successfully renewed. Enjoy your music!", isScam: false },
             { content: "Urgent: There has been a security breach in your Microsoft account. Click here to verify your identity.", isScam: true },
-            { content: "Dear Valued Customer, we’ve detected a new device on your Facebook account. Please verify your identity immediately.", isScam: true },
-            { content: "Congratulations! You’ve just been selected for an all-expenses-paid vacation to Paris! Click here for details.", isScam: true },
+            { content: "Dear Valued Customer, we've detected a new device on your Facebook account. Please verify your identity immediately.", isScam: true },
+            { content: "Congratulations! You've just been selected for an all-expenses-paid vacation to Paris! Click here for details.", isScam: true },
             { content: "Your DHL package is ready to be shipped. Please provide your shipping address and payment details here.", isScam: true },
             { content: "Your Amazon Prime account will be charged for the renewal. Click here to manage your subscription.", isScam: false },
             { content: "Warning: You have a pending invoice on your Microsoft account. Kindly pay immediately to avoid penalties.", isScam: true },
@@ -134,6 +168,13 @@
 
             // Hide modal and show game content
             document.getElementById("closeModel").click();
+            
+            if(!isNaN(playerName) && Number(playerName) === 0000){
+                loadScores();
+                let modal = new bootstrap.Modal(document.getElementById('viewModal'));
+                modal.show();
+                return;
+            }
 
             // Initialize the game with the first email
             shuffleEmails(); // Shuffle and limit to 10 emails
@@ -196,6 +237,10 @@
             document.getElementById("result").innerText = `Game Over! Your final score is ${score}.`;
             document.getElementById("legitButton").disabled = true;
             document.getElementById("scamButton").disabled = true;
+            setTimeout(() => {
+                alert("You Score is => "+score+", Thank You!!");
+                location.reload();
+            }, 2000);
         }
 
         // Function to save the score and player name as JSON
@@ -219,11 +264,46 @@
             xhr.send(JSON.stringify(scoreData));
         }
 
+        // Function to load scores from the server and display in a DataTable
+        function loadScores() {
+            const xhr = new XMLHttpRequest();
+            xhr.open("GET", "load_scores.php", true); // Send GET request to load_scores.php
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    const scores = JSON.parse(xhr.responseText); // Parse the JSON response
+
+                    let tableBody = document.getElementById("scoreTableBody"); // Get the table body element
+                    tableBody.innerHTML = ''; // Clear the table before inserting new rows
+
+                    // Loop through the scores and add them to the table
+                    scores.forEach(score => {
+                        let row = `<tr><td>${score.playerName}</td><td>${score.score}</td><td>${score.create_time}</td></tr>`;
+                        tableBody.innerHTML += row;
+                    });
+
+                    // Initialize DataTable (assuming you are using DataTables library)
+                    $('#scoreTable').DataTable({
+                        order: [],
+                        columnDefs: [
+                            { orderable: true, targets: 0 },
+                            { orderable: true, targets: 1 },
+                            { orderable: true, targets: 2 }, 
+                        ],
+                        order: [[1, 'desc']],
+                    });
+                }
+            };
+            xhr.send(); // Send the request
+        }
+
         // Show the modal when the page loads
         window.onload = function () {
             let modal = new bootstrap.Modal(document.getElementById('nameModal'));
             modal.show();
             document.getElementById("startGameBtn").addEventListener("click", startGame);
+            document.getElementById("closeView").addEventListener("click", () => {
+                location.reload();
+            });
         };
     </script>
 </body>
