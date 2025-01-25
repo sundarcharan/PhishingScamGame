@@ -113,7 +113,7 @@
         <div id="result" class="result"></div>
 
         <!-- Timer -->
-        <div id="timer" class="timer">Time left: 120</div>
+        <div id="timer" class="timer">Time left: 240</div>
 
         <!-- Score -->
         <h4>Score: <span id="score">0</span></h4>
@@ -148,7 +148,7 @@
 
         let currentEmailIndex = 0;
         let score = 0;
-        let timeLeft = 120;
+        let timeLeft = 240;
         let timerInterval;
         let playerName = "";
 

@@ -1,5 +1,6 @@
 <?php
 // save_score.php
+date_default_timezone_set("Asia/Kolkata");
 
 // Get the raw POST data
 $data = file_get_contents('php://input');
@@ -7,7 +8,7 @@ $data = file_get_contents('php://input');
 
 // Decode the JSON data into an array
 $scoreData = json_decode($data, true);
-$scoreData["create_time"] = date("y-m-d h:m");
+$scoreData["create_time"] = date("y-m-d h:i A");
 
 // Save the data to a JSON file (or database)
 $file = 'scores.json';
